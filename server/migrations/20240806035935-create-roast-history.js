@@ -10,13 +10,21 @@ module.exports = {
         type: Sequelize.INTEGER
       },
       UserId: {
-        type: Sequelize.INTEGER
+        type: Sequelize.INTEGER,
+        references: {
+          model: "Users",
+          key: "id",
+        },
+        onUpdate: "cascade",
+        onDelete: "cascade"
       },
       roastType: {
-        type: Sequelize.STRING
+        type: Sequelize.STRING,
+        allowNull: false
       },
       roastData: {
-        type: Sequelize.JSONB
+        type: Sequelize.JSONB,
+        allowNull: false
       },
       createdAt: {
         allowNull: false,

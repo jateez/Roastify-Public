@@ -10,13 +10,20 @@ module.exports = {
         type: Sequelize.INTEGER
       },
       UserId: {
-        type: Sequelize.INTEGER
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        references: {
+          model: "Users",
+          references: "id"
+        }
       },
       songId: {
-        type: Sequelize.STRING
+        type: Sequelize.STRING,
+        allowNull: false
       },
       songData: {
-        type: Sequelize.JSONB
+        type: Sequelize.JSONB,
+        allowNull: false
       },
       createdAt: {
         allowNull: false,

@@ -10,16 +10,19 @@ module.exports = {
         type: Sequelize.INTEGER
       },
       email: {
-        type: Sequelize.STRING
+        type: Sequelize.STRING,
+        unique: true,
+        allowNull: false
       },
       password: {
-        type: Sequelize.STRING
+        type: Sequelize.STRING,
+        allowNull: false
       },
       googleId: {
-        type: Sequelize.STRING
+        type: Sequelize.STRING,
       },
       spotifyId: {
-        type: Sequelize.STRING
+        type: Sequelize.STRING,
       },
       lastRoastDate: {
         type: Sequelize.DATE
