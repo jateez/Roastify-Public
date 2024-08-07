@@ -1,5 +1,4 @@
-const { where } = require("sequelize");
-const { User } = require("../models/index")
+const { User, RoastHistory } = require("../models/index")
 const { OAuth2Client } = require('google-auth-library');
 const { signToken } = require("../helpers/jwt");
 const { verifyHashedPassword } = require("../helpers/bcrypt");
@@ -93,13 +92,63 @@ class Controller {
       next(error)
     }
   }
-  static async signInSpotify(req, res, next) {
+  static async uploadImage(req, res, next) {
+    try {
+      const uploadedImageData = await uploadImage(req);
+      const { userId } = req
+      const user = await User.findByPk(userId)
+      if (!user) {
+        throw { name: "NOT_FOUND" }
+      }
+      await User.update({ imageUrl: uploadedImageData.secure_url }, { where: { id: userId } })
+      res.status(200).json({ message: `Success update profile picture` })
+    } catch (error) {
+      next(error)
+    }
+  }
+  static async updateProfile(req, res, next) {
     try {
 
+      res.status(200).json({ message: `Success delete Roast History` })
     } catch (error) {
       next(error)
     }
   }
 
+  static async getRoast(req, res, next) {
+    try {
+      const { userId } = req
+      const data = await RoastHistory.findAll({
+        where: {
+          UserId: userId
+        }
+      })
+      res.status(200).json({ data })
+    } catch (error) {
+      next(error)
+    }
+  }
+  static async getRoastByID(req, res, next) {
+    try {
+      const { roastId } = req.params
+      const { userId } = req
+      const data = await RoastHistory.findByPk(
+        roastId
+      )
+      res.status(200).json({ data })
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  static async deleteRoastById(req, res, next) {
+    try {
+      const { roastId } = req.params
+      await RoastHistory.destroy({ where: { id: roastId } })
+      res.status(200).json({ message: `Success delete Roast History` })
+    } catch (error) {
+      next(error)
+    }
+  }
 }
 module.exports = Controller;
