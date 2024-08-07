@@ -8,6 +8,9 @@ class Controller {
 
   static async index(req, res, next) {
     try {
+      console.log(req.body, "<< body")
+      console.log(req.headers, "<< headers")
+      console.log(req.query, "<< query")
       res.status(200).json({ message: "Welcome to Roastify API" })
     } catch (error) {
       next(error)
@@ -15,13 +18,16 @@ class Controller {
   }
   static async register(req, res, next) {
     try {
-      const { email, password } = req.body;
+      const { email, password, fullName } = req.body;
       if (!email || !password) {
         throw ({ name: "EMAIL_AND_PASSWORD_REQUIRED" })
       }
-      const createdUser = await User.create({ email, password })
+      if (!fullName) {
+        throw ({ name: "EMAIL_AND_PASSWORD_REQUIRED" })
+      }
+      const createdUser = await User.create({ email, password, fullName })
 
-      res.status(201).json({ id: createdUser.id, email })
+      res.status(201).json({ id: createdUser.id, email, fullName })
     } catch (error) {
       next(error)
     }
@@ -60,18 +66,18 @@ class Controller {
       const client = new OAuth2Client();
       const ticket = await client.verifyIdToken({
         idToken: token,
-        audience: process.env.CLIENT_ID
+        audience: process.env.GOOGLE_CLIENT_ID
       })
-      console.log(token, "<<TOKEN")
       const payload = ticket.getPayload();
-      console.log(payload, "<<< PAYLOAD")
       const email = payload.email
-      const google_id = payload.sub
+      const googleId = payload.sub
+      const fullName = payload.name
       const [user, created] = await User.findOrCreate({
         where: { email },
         defaults: {
           password: 'viagoogle',
-          google_id
+          googleId,
+          fullName
         },
         hooks: false
       });
