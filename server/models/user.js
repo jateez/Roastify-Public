@@ -59,7 +59,8 @@ module.exports = (sequelize, DataTypes) => {
     },
     googleId: DataTypes.STRING,
     spotifyId: DataTypes.STRING,
-    lastRoastDate: DataTypes.DATE
+    lastRoastDate: DataTypes.DATE,
+    imageUrl: DataTypes.STRING
   }, {
     sequelize,
     modelName: 'User',

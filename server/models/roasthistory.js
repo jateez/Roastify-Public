@@ -16,7 +16,9 @@ module.exports = (sequelize, DataTypes) => {
   RoastHistory.init({
     UserId: DataTypes.INTEGER,
     roastType: DataTypes.STRING,
-    roastData: DataTypes.JSONB
+    roastData: DataTypes.JSONB,
+    tracks: DataTypes.JSONB,
+    artists: DataTypes.JSONB
   }, {
     sequelize,
     modelName: 'RoastHistory',
