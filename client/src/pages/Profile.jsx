@@ -1,67 +1,97 @@
 import { Link, useNavigate } from "react-router-dom";
 import Avatar from "../components/Avatar";
 import instance from "../config/instance";
+import { useEffect, useState } from "react";
 
 export default function Profile() {
+  const [profile, setProfile] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
+  const [imageFile, setImageFile] = useState("");
+  const [email, setEmail] = useState("");
+  const [spotifyId, setSpotifyId] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
+  const [histories, setHistories] = useState([]);
   const navigate = useNavigate();
-  const historyData = [
-    {
-      id: 1,
-      roastType: "spotify_account",
-      roastData: "Lo ya, musik lo itu ibarat popcorn di bioskop, banyak orang suka tapi ga ada isi yang berharga...",
-      createdAt: "2024-08-07T22:18:02.632Z",
-    },
-    {
-      id: 2,
-      roastType: "custom_roast",
-      roastData: "Musik lo kayak paket komplit di restoran fast food, ada semuanya tapi ga ada yang spesial...",
-      createdAt: "2024-07-15T18:30:22.111Z",
-    },
-    {
-      id: 3,
-      roastType: "custom_roast",
-      roastData: "Musik lo kayak paket komplit di restoran fast food, ada semuanya tapi ga ada yang spesial...",
-      createdAt: "2024-07-15T18:30:22.111Z",
-    },
-    {
-      id: 4,
-      roastType: "custom_roast",
-      roastData: "Musik lo kayak paket komplit di restoran fast food, ada semuanya tapi ga ada yang spesial...",
-      createdAt: "2024-07-15T18:30:22.111Z",
-    },
-    {
-      id: 5,
-      roastType: "custom_roast",
-      roastData: "Musik lo kayak paket komplit di restoran fast food, ada semuanya tapi ga ada yang spesial...",
-      createdAt: "2024-07-15T18:30:22.111Z",
-    },
-    {
-      id: 6,
-      roastType: "custom_roast",
-      roastData: "Musik lo kayak paket komplit di restoran fast food, ada semuanya tapi ga ada yang spesial...",
-      createdAt: "2024-07-15T18:30:22.111Z",
-    },
-    {
-      id: 7,
-      roastType: "custom_roast",
-      roastData: "Musik lo kayak paket komplit di restoran fast food, ada semuanya tapi ga ada yang spesial...",
-      createdAt: "2024-07-15T18:30:22.111Z",
-    },
-    {
-      id: 8,
-      roastType: "custom_roast",
-      roastData: "Musik lo kayak paket komplit di restoran fast food, ada semuanya tapi ga ada yang spesial...",
-      createdAt: "2024-07-15T18:30:22.111Z",
-    },
-    {
-      id: 9,
-      roastType: "custom_roast",
-      roastData: "Musik lo kayak paket komplit di restoran fast food, ada semuanya tapi ga ada yang spesial...",
-      createdAt: "2024-07-15T18:30:22.111Z",
-    },
-  ];
   function rowHandler(id) {
     navigate("");
+  }
+  async function fetchHistories() {
+    try {
+      setIsLoading(true);
+      const response = await instance({
+        method: "get",
+        url: "/roasts",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+        },
+      });
+      setHistories(response.data.data);
+    } catch (error) {
+      setIsLoading(false);
+      console.log(error);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+  async function uploadImage(e) {
+    try {
+      setIsLoading(true);
+      setImageFile(e.target.files[0]);
+      console.log(e.target.files[0]);
+      let formData = new FormData();
+      formData.append("image", imageFile);
+      await instance({
+        method: "patch",
+        url: "/profile",
+        headers: {
+          // "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+        },
+        data: formData,
+      });
+    } catch (error) {
+      console.log(error);
+      setIsLoading(false);
+    } finally {
+      setIsLoading(false);
+      fetchData();
+    }
+  }
+
+  async function fetchData() {
+    try {
+      const data = (
+        await instance({
+          method: "get",
+          url: "/profile",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+          },
+        })
+      ).data.profile;
+      setProfile(data);
+      setEmail(data.email);
+      setFullName(data.fullName);
+      setImageUrl(data.imageUrl);
+      setSpotifyId(data.spotifyId);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+  useEffect(() => {
+    fetchData();
+    fetchHistories();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <>
+        <div className="flex w-full min-h-screen flex-col justify-center items-center">
+          <span className="loading loading-spinner loading-lg"></span>
+        </div>
+      </>
+    );
   }
   return (
     <>
@@ -69,42 +99,43 @@ export default function Profile() {
         <p className="text-xl md:text-4xl font-medium text-spotify-white pb-10">Profile</p>
         <div className="w-full flex gap-x-20">
           <div className="w-1/3 h-full flex flex-col items-center justify-center gap-y-5">
-            <Avatar fullName={"Arya"} />
-            <h1 className="text-md font-medium text-center">{"User"}</h1>
-            <h2 className="text-md font-medium text-center">{"Email"}</h2>
+            <Avatar fullName={fullName} imageUrl={imageUrl} />
+            <h1 className="text-md font-medium text-center">{fullName}</h1>
+            <h2 className="text-md font-medium text-center">{email}</h2>
             <h3 className="text-sm lg:text-md font-medium text-center">
-              {"Spotify Account Linked: "} <span className="text-spotify-green font-semibold">{"Yes"}</span>
+              {"Spotify Account Linked: "} <span className="text-spotify-green font-semibold">{spotifyId ? "Yes" : "No"}</span>
             </h3>
-            <label htmlFor="imageFile" className="btn sm:btn-sm md:btn-md bg-spotify-green hover:bg-spotify-light-green text-spotify-off-white">
-              Upload Image Profile
+            <label htmlFor="imageButton" className="btn sm:btn-sm md:btn-md bg-spotify-green hover:bg-spotify-light-green text-spotify-off-white">
+              Update Profile Image
             </label>
-            <input id="imageFile" type="file" className="hidden" />
+            <input id="imageButton" type="file" className="hidden" onChange={(e) => uploadImage(e)} />
           </div>
           <div className="divider divider-horizontal divider-success opacity-70"></div>
           <div className="w-2/3 max-h-full">
             <h2 className="text-2xl font-bold mb-4">Roast History</h2>
             <div className="overflow-y-auto w-full h-[24rem]">
-              <table className="table w-full">
-                {/* head */}
-                <thead>
-                  <tr>
-                    <th className="text-spotify-green opacity-70">ID</th>
-                    <th className="hidden lg:table-cell text-spotify-green opacity-70">Roast Type</th>
-                    <th className="text-spotify-green opacity-70">Roast Data</th>
-                    <th className="hidden lg:table-cell text-spotify-green opacity-70">Date</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {historyData.map((history) => (
-                    <tr key={history.id} className="hover" onClick={() => rowHandler(id)}>
-                      <td>{history.id}</td>
-                      <td className="hidden lg:table-cell">{history.roastType}</td>
-                      <td className="truncate max-w-xs">{history.roastData}</td>
-                      <td className="hidden lg:table-cell ">{new Date(history.createdAt).toLocaleString().split(",")[0]}</td>
+              {histories.length > 0 && (
+                <table className="table w-full">
+                  <thead>
+                    <tr>
+                      <th className="text-spotify-green opacity-70">ID</th>
+                      <th className="hidden lg:table-cell text-spotify-green opacity-70">Roast Type</th>
+                      <th className="text-spotify-green opacity-70">Roast Data</th>
+                      <th className="hidden lg:table-cell text-spotify-green opacity-70">Date</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {histories.map((history) => (
+                      <tr key={history.id} className="hover" onClick={() => rowHandler(history.id)}>
+                        <td>{history.id}</td>
+                        <td className="hidden lg:table-cell">{history.roastType}</td>
+                        <td className="truncate max-w-xs">{history.roastData}</td>
+                        <td className="hidden lg:table-cell">{new Date(history.createdAt).toLocaleString().split(",")[0]}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
             </div>
           </div>
         </div>

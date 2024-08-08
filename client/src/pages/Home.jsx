@@ -9,11 +9,10 @@ export default function Home() {
       const { data } = await instance({
         method: "get",
         url: "/spotify-login",
-        // headers: {
-        //   Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-        // },
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+        },
       });
-      console.log(data, "<><<<< data");
       setLoginUrl(data.loginUrl);
     } catch (error) {
       console.error("Error fetching login URL:", error);

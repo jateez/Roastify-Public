@@ -30,17 +30,15 @@ export default function Register() {
     async function handleCredentialResponse(response) {
       console.log("Encoded JWT ID token: " + response.credential);
       try {
-        const { data } = (
-          await axios({
-            method: "post",
-            url: "/google-login",
-            headers: {
-              google_token: response.credential,
-            },
-          })
-        ).data;
-        console.log(data);
+        const { data } = await instance({
+          method: "post",
+          url: "/google-login",
+          headers: {
+            google_token: response.credential,
+          },
+        });
         localStorage.setItem("access_token", data.access_token);
+        navigation("/");
       } catch (error) {
         console.log(error);
       }
