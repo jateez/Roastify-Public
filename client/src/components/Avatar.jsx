@@ -1,5 +1,4 @@
 export default function Avatar({ imageUrl, fullName }) {
-  console.log(fullName[0]);
   if (imageUrl) {
     return (
       <>
