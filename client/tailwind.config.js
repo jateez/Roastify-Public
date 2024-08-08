@@ -7,8 +7,11 @@ export default {
   theme: {
     colors: {
       "spotify-green": "#1DB954",
+      'spotify-light-green': '#1ED760',
       "spotify-black": "#191414",
-      "spotify-white": "#FFFFFF"
+      'spotify-dark-gray': '#282828',
+      "spotify-white": "#FFFFFF",
+      "spotify-off-white": "#FAF9F6"
     },
     extend: {},
   },

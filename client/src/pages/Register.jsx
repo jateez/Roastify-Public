@@ -1,24 +1,26 @@
 import { useEffect, useState } from "react";
+import axios from "../config/instance";
 import instance from "../config/instance";
 import { useNavigate } from "react-router-dom";
 
-export default function Login() {
+export default function Register() {
+  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigation = useNavigate();
-  async function handleLogin(e) {
+  async function handleRegister(e) {
     try {
       e.preventDefault();
-      const { data } = await instance({
+      await instance({
         method: "post",
-        url: "/login",
+        url: "/register",
         data: {
+          fullName,
           email,
           password,
         },
       });
-      localStorage.setItem("access_token", data.access_token);
-      navigation("/");
+      navigation("/login");
     } catch (error) {
       console.log(error);
     }
@@ -55,9 +57,13 @@ export default function Login() {
   }, []);
   return (
     <div className="flex flex-col justify-center items-center h-screen w-screen gap-y-5">
-      <h1 className="text-2xl md:text-4xl text-spotify-green md:font-semibold">Login</h1>
+      <h1 className="text-2xl md:text-4xl text-spotify-green md:font-semibold">Register</h1>
       <div className="card w-96">
         <div className="card-body flex flex-col items-center justify-center w-full">
+          <div className="w-full">
+            <label htmlFor="fullName">Full Name</label>
+            <input type="text" placeholder="John Doe" className="input input-bordered w-full" onChange={(e) => setFullName(e.target.value)} />
+          </div>
           <div className="w-full">
             <label htmlFor="email">Email Address</label>
             <input type="email" placeholder="johndoe@mail.com" className="input input-bordered w-full" onChange={(e) => setEmail(e.target.value)} />
@@ -67,8 +73,8 @@ export default function Login() {
             <input type="password" placeholder="*****" className="input input-bordered w-full" onChange={(e) => setPassword(e.target.value)} />
           </div>
           <div className="w-full my-5">
-            <button className="btn w-full bg-spotify-green hover:bg-spotify-white text-spotify-white hover:text-spotify-green" onClick={handleLogin}>
-              Login
+            <button className="btn w-full bg-spotify-green hover:bg-spotify-white text-spotify-white hover:text-spotify-green" onClick={handleRegister}>
+              Register
             </button>
           </div>
           <div className="card-actions w-full flex justify-center">
