@@ -142,6 +142,9 @@ export default function Profile() {
               Update Profile Image
             </label>
             <input id="imageButton" type="file" className="hidden" onChange={(e) => uploadImage(e)} />
+            <Link to={"/logout"} className="btn sm:btn-sm md:btn-md btn-outline btn-error w-40">
+              Logout
+            </Link>
           </div>
           <div className="divider divider-horizontal divider-success opacity-70"></div>
           <div className="w-2/3 max-h-full">

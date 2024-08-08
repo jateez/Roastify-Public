@@ -20,21 +20,19 @@ class SpotifyController {
         redirect_uri: redirect_uri,
         state: state
       })
-      res.redirect("https://accounts.spotify.com/authorize?" + params);
+      const loginUrl = "https://accounts.spotify.com/authorize?" + params;
+      res.status(200).json({ loginUrl });
     } catch (error) {
       next(error)
     }
   }
-
   static async callback(req, res, next) {
     try {
-      const code = req.query.code || null;
-      const state = req.query.state || null;
-      console.log(code, "<< code")
-      console.log(state, "<< state")
-      if (state === null) {
-        res.redirect('/#' + querystring.stringify({ error: 'state_mismatch' }));
+      const { code, state } = req.query;
+      if (!code || !state) {
+        return res.status(400).json({ error: 'Missing code or state' });
       }
+
       const authOptions = {
         method: "post",
         url: 'https://accounts.spotify.com/api/token',
@@ -48,14 +46,13 @@ class SpotifyController {
           'Authorization': 'Basic ' + (new Buffer.from(client_id + ':' + client_secret).toString('base64'))
         },
       }
+
       const { data } = await axios(authOptions);
-      console.log(data, "<< data")
-      res.status(200).json({ spotify_access_token: data.access_token })
+      res.redirect(`${process.env.CLIENT_BASE_URL}/callback?spotify_access_token=${data.access_token}`)
     } catch (error) {
-      next(error)
+      next(error);
     }
   }
-
   static async getUserProfile(req, res, next) {
     try {
       const { spotify_access_token } = req.body
@@ -76,9 +73,90 @@ class SpotifyController {
     }
   }
 
+  static async generateRoast(req, res, next) {
+    try {
+      const data = req.body;
+
+      const artists = data.filter(item => item.followers);
+      const tracks = data.filter(item => !item.followers);
+
+      const filteredArtists = artists.map(artist => {
+        const { external_urls, href, id, type, uri, ...rest } = artist;
+        rest.popularity_score = rest.popularity;
+        delete rest.popularity;
+        rest.genres = rest.genres.join(", ");
+        return JSON.stringify(rest);
+      });
+      const artistsData = filteredArtists.join("  ");
+
+      const filteredTracks = tracks.map(track => {
+        const { album, artists, external_ids, external_urls, href, id, is_local, is_playable, linked_from, preview_url, restrictions, type, uri, ...rest } = track;
+        rest.album = {
+          type: album.type,
+          total_track: album.total_tracks,
+          name: album.name,
+          release_data: album.release_date
+        };
+        rest.artists = artists.map(artist => artist.name).join(", ");
+        return JSON.stringify(rest);
+      });
+      const tracksData = filteredTracks.join(" ");
+
+      const openai = new OpenAI();
+      const contentStr = `
+    You are an advanced AI designed to generate creative and edgy content. Your task is to provide roasting comments for the user about their taste of music artists and their tracks based on the given data. Your roasts should be harsh, direct, and infused with humor. Use colloquial language and be unapologetically blunt. Here's what you need to know:
+    Data Structure:
+    - Artist Data: Each artist has attributes including genres, name, total followers, and popularity score.
+    - Track Data: Each track has attributes including album name, release date, artist, explicitness, name, and popularity.
+
+    Roasting Guidelines:
+    - Focus on the artist's popularity, music quality, and overall impact.
+    - You can also focus on the user's track taste.
+    - Make comparisons with other artists or tracks if it highlights the shortcomings.
+    - Use hyperbolic and sarcastic language to emphasize criticisms.
+    - Aim for humor. Bit offensives are fine.
+    - You may assume the user's personality from their taste.
+    Output Format:
+    - Directly provide the roasting comments in paragraph form without pre-text or post-text.
+    - Use Bahasa Indonesia, and more terms commonly used by the younger generation.
+    - Put the roast in one paragraph, don't use numbering.
+    - Set the maximum output limited to 150 tokens.
+    Given the following data, generate roasting comments:
+      ${artistsData} and ${tracksData}
+    `;
+
+      const completion = await openai.chat.completions.create({
+        messages: [{ role: "system", content: contentStr }],
+        model: "gpt-4o-mini-2024-07-18",
+        temperature: 0.9,
+        max_tokens: 200,
+      });
+
+      const roastData = completion.choices[0].message.content;
+      const { userId } = req;
+
+      await User.update({ spotifyId: 1 }, {
+        where: {
+          id: userId
+        }
+      });
+
+      const createdRoast = await RoastHistory.create({
+        UserId: userId,
+        roastType: "spotify_account",
+        roastData,
+        tracks: tracksData,
+        artists: artistsData
+      });
+
+      res.status(201).json({ output: createdRoast });
+    } catch (error) {
+      next(error);
+    }
+  }
   static async getUserRoast(req, res, next) {
     try {
-      const { spotify_access_token } = req.body
+      const { spotify_access_token } = req.query
       let artists = (await axios({
         method: "get",
         url: "https://api.spotify.com/v1/me/top/artists?time_range=medium_term&limit=10",
@@ -86,6 +164,7 @@ class SpotifyController {
           Authorization: `Bearer ${spotify_access_token}`
         }
       })).data
+
 
       artists = artists.items.map(el => {
         delete el.external_urls;
@@ -176,21 +255,22 @@ class SpotifyController {
       Given the following data, generate roasting comments:
         ${artists} and ${tracks}
       `
-      // const completion = await openai.chat.completions.create({
-      //   messages: [{ role: "system", content: contentStr }],
-      //   model: "gpt-4o-mini-2024-07-18",
-      //   temperature: 0.9,
-      //   max_tokens: 150,
-      // });
+      const completion = await openai.chat.completions.create({
+        messages: [{ role: "system", content: contentStr }],
+        model: "gpt-4o-mini-2024-07-18",
+        temperature: 0.9,
+        max_tokens: 200,
+      });
 
-      // console.log(completion.choices[0]);
       const { userId } = req
-      // console.log(artistData, trackData)
+      await User.update({ spotifyId: 1 }, {
+        where: {
+          id: userId
+        }
+      })
       const createdRoast = await RoastHistory.create({ UserId: userId, roastType: "spotify_account", roastData: completion.choices[0].message.content, tracks: trackData, artists: artistData })
-      res.status(200).json({ output: createdRoast })
-      // res.status(200).json({ tracks, artists })
+      res.status(201).json({ output: createdRoast })
     } catch (error) {
-      console.log(error)
       next(error)
     }
   }
@@ -199,15 +279,14 @@ class SpotifyController {
     try {
       const { spotify_access_token } = req.body
       const { search, type } = req.query
-
       const results = (await axios({
         method: "get",
         url: `https://api.spotify.com/v1/search?q=${search}&type=${type}&market=ID&limit=5`,
         headers: {
           Authorization: `Bearer ${spotify_access_token}`
         }
-      })).data.items
-      res.status(200).json({ results })
+      })).data
+      res.status(200).json(results)
     } catch (error) {
       next(error)
     }
@@ -272,11 +351,9 @@ class SpotifyController {
           return JSON.stringify(el)
         }
       })
-      console.log(data, "<<< sebelum join")
 
       data = data.join("  ")
 
-      console.log(data, "<<< habis join")
       const openai = new OpenAI();
       const contentStr = `
       You are an advanced AI designed to generate creative and edgy content. Your task is to provide roasting comments for user about their taste of music artists and their tracks based on the given data. Your roasts should be harsh, direct, and infused with humor. Use colloquial language and be unapologetically blunt. Here’s what you need to know:
@@ -299,16 +376,16 @@ class SpotifyController {
       Given the following data, generate roasting comments:
         ${data}
       `
-      // const completion = await openai.chat.completions.create({
-      //   messages: [{ role: "system", content: contentStr }],
-      //   model: "gpt-4o-mini-2024-07-18",
-      //   temperature: 0.9,
-      //   max_tokens: 150,
-      // });
+      const completion = await openai.chat.completions.create({
+        messages: [{ role: "system", content: contentStr }],
+        model: "gpt-4o-mini-2024-07-18",
+        temperature: 0.9,
+        max_tokens: 150,
+      });
 
       const { userId } = req
       const createdRoast = await RoastHistory.create({ UserId: userId, roastType: "custom", roastData: completion.choices[0].message.content, tracks: tracks, artists: artists })
-      res.status(200).json({ output: createdRoast })
+      res.status(201).json({ output: createdRoast })
     } catch (error) {
       next(error)
     }

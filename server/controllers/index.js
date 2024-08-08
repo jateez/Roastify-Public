@@ -2,14 +2,11 @@ const { User, RoastHistory } = require("../models/index")
 const { OAuth2Client } = require('google-auth-library');
 const { signToken } = require("../helpers/jwt");
 const { verifyHashedPassword } = require("../helpers/bcrypt");
-
+const cloudinary = require("../helpers/cloudinary")
 class Controller {
 
   static async index(req, res, next) {
     try {
-      console.log(req.body, "<< body")
-      console.log(req.headers, "<< headers")
-      console.log(req.query, "<< query")
       res.status(200).json({ message: "Welcome to Roastify API" })
     } catch (error) {
       next(error)
@@ -19,15 +16,19 @@ class Controller {
     try {
       const { email, password, fullName } = req.body;
       if (!email || !password) {
-        throw ({ name: "EMAIL_AND_PASSWORD_REQUIRED" })
+        throw ({ name: "CredentialsRequired" })
       }
       if (!fullName) {
-        throw ({ name: "EMAIL_AND_PASSWORD_REQUIRED" })
+        throw ({ name: "CredentialsRequired" })
       }
       const createdUser = await User.create({ email, password, fullName })
 
       res.status(201).json({ id: createdUser.id, email, fullName })
     } catch (error) {
+      if (error.name === "SequelizeValidationError") {
+        const name = error.errors.map(el => el.message);
+        error.name = name;
+      }
       next(error)
     }
   }
@@ -37,7 +38,7 @@ class Controller {
       const { email, password } = req.body;
 
       if (!email || !password) {
-        throw { name: "CREDENTIALS_REQUIRED" }
+        throw { name: "CredentialsRequired" }
       }
       const user = await User.findOne({
         where: {
@@ -45,16 +46,20 @@ class Controller {
         }
       });
       if (!user) {
-        throw { name: "UNAUTHORIZED" }
+        throw { name: "Unauthorized" }
       }
       const isPasswordMatch = verifyHashedPassword(password, user.password);
       if (!isPasswordMatch) {
-        throw { name: "UNAUTHORIZED" }
+        throw { name: "Unauthorized" }
       }
 
       const access_token = signToken({ id: user.id })
       res.status(200).json({ access_token })
     } catch (error) {
+      if (error.name === "SequelizeValidationError") {
+        const name = error.errors.map(el => el.message);
+        error.name = name;
+      }
       next(error)
     }
   }
@@ -81,11 +86,6 @@ class Controller {
         hooks: false
       });
 
-      if (!created) {
-        if (user.password !== "viagoogle") {
-          throw { name: "USER_REGISTERED_NON_GOOGLE" }
-        }
-      }
       const access_token = signToken({ id: user.id })
       res.status(200).json({ access_token })
     } catch (error) {
@@ -94,11 +94,11 @@ class Controller {
   }
   static async uploadImage(req, res, next) {
     try {
-      const uploadedImageData = await uploadImage(req);
+      const uploadedImageData = await cloudinary(req);
       const { userId } = req
       const user = await User.findByPk(userId)
       if (!user) {
-        throw { name: "NOT_FOUND" }
+        throw { name: "NotFound" }
       }
       await User.update({ imageUrl: uploadedImageData.secure_url }, { where: { id: userId } })
       res.status(200).json({ message: `Success update profile picture` })
@@ -106,15 +106,6 @@ class Controller {
       next(error)
     }
   }
-  static async updateProfile(req, res, next) {
-    try {
-
-      res.status(200).json({ message: `Success delete Roast History` })
-    } catch (error) {
-      next(error)
-    }
-  }
-
   static async getRoast(req, res, next) {
     try {
       const { userId } = req
@@ -123,6 +114,9 @@ class Controller {
           UserId: userId
         }
       })
+      if (!data) {
+        throw { name: "NotFound" }
+      }
       res.status(200).json({ data })
     } catch (error) {
       next(error)
@@ -131,10 +125,12 @@ class Controller {
   static async getRoastByID(req, res, next) {
     try {
       const { roastId } = req.params
-      const { userId } = req
       const data = await RoastHistory.findByPk(
         roastId
       )
+      if (!data) {
+        throw { name: "NotFound" }
+      }
       res.status(200).json({ data })
     } catch (error) {
       next(error)
@@ -144,8 +140,25 @@ class Controller {
   static async deleteRoastById(req, res, next) {
     try {
       const { roastId } = req.params
+      const foundRoast = await RoastHistory.findByPk(roastId)
+      if (!foundRoast) {
+        throw { name: "NotFound" }
+      }
       await RoastHistory.destroy({ where: { id: roastId } })
       res.status(200).json({ message: `Success delete Roast History` })
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  static async getProfile(req, res, next) {
+    try {
+      const { userId } = req
+      const profile = await User.findByPk(userId)
+      if (!profile) {
+        throw { name: "NotFound" }
+      }
+      res.status(200).json({ profile })
     } catch (error) {
       next(error)
     }
