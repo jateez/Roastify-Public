@@ -1,13 +1,15 @@
 import { useEffect, useState } from "react";
 import instance from "../config/instance";
+import { toast } from "react-toastify";
 
-export default function CustomRoast({ imageUrl }) {
-  const [input, setInput] = useState([]);
+export default function CustomRoast() {
   const [search, setSearch] = useState("");
   const [tracks, setTracks] = useState([]);
   const [artists, setArtists] = useState([]);
   const [results, setResults] = useState([]);
+  const [output, setOutput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedItems, setSelectedItems] = useState([]);
   const [type, setType] = useState("artist%2Ctrack");
   const [error, setError] = useState(null);
 
@@ -32,23 +34,108 @@ export default function CustomRoast({ imageUrl }) {
           },
         });
         setResults(data);
-        console.log(data, "<<< data");
-        // const response = await axios.get(`https://your-api-endpoint.com/search?q=${search}`);
-        // setResults(response.data);
-      } catch (err) {
-        setError("An error occurred while fetching data");
-        console.error("Search error:", err);
+        if (type) {
+        }
+        setArtists(data.artists.items);
+        setTracks(data.tracks.items);
+      } catch (error) {
+        if (error.response.data.message) {
+          toast.error(error.response.data.message, {
+            position: "top-center",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+            theme: "light",
+          });
+        } else {
+          toast.error(error.message, {
+            position: "top-center",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+            theme: "light",
+          });
+        }
       } finally {
         setIsLoading(false);
       }
     }, 500);
 
     return () => clearTimeout(debounceTimeout);
-  }, [search]);
+  }, [search, type]);
 
   const handleInputChange = (e) => {
     setSearch(e.target.value);
   };
+  const handleItemClick = (item) => {
+    const isItemSelected = selectedItems.some((i) => i.id === item.id);
+    if (isItemSelected) {
+      setSelectedItems(selectedItems.filter((i) => i.id !== item.id));
+    } else {
+      setSelectedItems([...selectedItems, item]);
+    }
+  };
+  const handleRoastClick = async () => {
+    try {
+      setIsLoading(true);
+      const { data } = await instance({
+        method: "post",
+        url: "/custom-roast",
+        data: {
+          data: selectedItems,
+        },
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+        },
+      });
+      setOutput(data);
+      setSelectedItems([]);
+    } catch (error) {
+      setIsLoading(false);
+      if (error.message) {
+        toast.error(error.message, {
+          position: "top-center",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "light",
+        });
+      } else {
+        toast.error(error.response.data.message, {
+          position: "top-center",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "light",
+        });
+      }
+    } finally {
+      setIsLoading(false);
+      document.getElementById("modalResult").showModal();
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <>
+        <div className="flex w-full min-h-screen flex-col justify-center items-center">
+          <span className="loading loading-spinner loading-lg"></span>
+        </div>
+      </>
+    );
+  }
   return (
     <>
       <div className="flex w-full min-h-screen flex-col items-center">
@@ -62,241 +149,111 @@ export default function CustomRoast({ imageUrl }) {
             </label>
           </div>
           <div className="flex gap-x-5 mt-5">
-            <button
-              className="btn sm:btn-sm md:btn-md bg-spotify-green hover:bg-spotify-light-green text-spotify-off-white"
-              onClick={(e) => {
-                e.preventDefault();
-                setType("artist%2Ctrack");
-              }}
-            >
-              All
+            <button className="btn sm:btn-sm md:btn-md bg-spotify-green hover:bg-spotify-light-green text-spotify-black" onClick={handleRoastClick}>
+              Roast
             </button>
-            <button
-              className="btn sm:btn-sm md:btn-md bg-spotify-green hover:bg-spotify-light-green text-spotify-off-white"
-              onClick={(e) => {
-                e.preventDefault();
-                setType("track");
-              }}
-            >
-              Tracks
-            </button>
-            <button
-              className="btn sm:btn-sm md:btn-md bg-spotify-green hover:bg-spotify-light-green text-spotify-off-white"
-              onClick={(e) => {
-                e.preventDefault();
-                setType("artist");
-              }}
-            >
-              Artists
-            </button>
-            <button className="btn sm:btn-sm md:btn-md bg-spotify-green hover:bg-spotify-light-green text-spotify-off-white">Roast</button>
+            <dialog id="modalResult" className="modal">
+              <div className="modal-box">
+                <h3 className="font-bold text-lg">{"Your Roast"}</h3>
+                <p className="py-4">{output}</p>
+              </div>
+              <form method="dialog" className="modal-backdrop">
+                <button>close</button>
+              </form>
+            </dialog>
           </div>
           <div className="divider divider-lg pt-10"></div>
-          <div className="flex w-full pt-10 px-10 shadow-md justify-center h-80">
-            <div className="w-1/2 h-40">
-              <span className="text-md md:text-2xl text-spotify-white font-medium">Top Result</span>
-              <div className="p-5 w-full h-full flex flex-col gap-y-2">
-                {imageUrl ? (
-                  <div className="avatar">
-                    <div className="w-32 rounded-xl">
-                      <img src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp" />
+          <div className="flex w-full pt-10 px-10 shadow-md justify-evenly h-96">
+            {tracks.length > 0 && (
+              <>
+                <div className={`w-1/2 h-fit hover:bg-spotify-dark-gray hover:opacity-70 ${selectedItems.some((i) => i.id === tracks[0].id) ? "border-b border-spotify-light-green" : ""}`} onClick={() => handleItemClick(tracks[0])}>
+                  <span className="text-md md:text-2xl text-spotify-white font-medium">Top Result</span>
+                  <div className="p-5 w-full h-full flex flex-col gap-y-2">
+                    {tracks[0].album.images[0].url ? (
+                      <div className="avatar">
+                        <div className="w-32 rounded-xl">
+                          <img src={tracks[0].album.images[0].url} />
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="avatar placeholder">
+                        <div className="bg-neutral text-neutral-content w-32 rounded-xl">
+                          <span className="text-xl">{tracks[0].album.name[0]}</span>
+                        </div>
+                      </div>
+                    )}
+                    <p className="text-lg text-spotify-white font-medium pt-4">{tracks[0].album.name}</p>
+                    <div className="flex">
+                      <p className="text-md text-spotify-white font-light">
+                        {tracks[0].album.album_type} <span className="font-normal">{tracks[0].artists[0].name}</span>
+                      </p>
                     </div>
                   </div>
-                ) : (
-                  <div className="avatar placeholder">
-                    <div className="bg-neutral text-neutral-content w-32 rounded-xl">
-                      <span className="text-xl">{"judul lagu"}</span>
-                    </div>
-                  </div>
-                )}
-                <p className="text-lg text-spotify-white font-medium pt-4">Judul lagu</p>
-                <div className="flex">
-                  <p className="text-md text-spotify-white font-light">
-                    Song <span className="font-normal">Artist</span>
-                  </p>
                 </div>
-              </div>
-            </div>
-            <div className="w-1/2 h-40">
-              <span className="text-md md:text-2xl text-spotify-white font-medium">Songs</span>
-              <div className="p-5 w-full h-1/4 flex flex-col gap-y-2">
-                <div className="flex w-full">
-                  <div className="w-1/6">
-                    {imageUrl ? (
-                      <div className="avatar">
-                        <div className="w-12 rounded-xl">
-                          <img src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp" />
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="avatar placeholder">
-                        <div className="bg-neutral text-neutral-content w-12 rounded-xl">
-                          <span className="text-xl">{"judul lagu"}</span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                  <div className="w-4/6 flex flex-col justify-evenly">
-                    <p>Judul</p>
-                    <p>Artist</p>
+                <div className="w-1/2 h-fit">
+                  <span className="text-md md:text-2xl text-spotify-white font-medium">Songs</span>
+                  <div className="p-5 w-full h-1/4 flex flex-col gap-y-2 ">
+                    {tracks.length > 0 &&
+                      tracks.map((track, i) => {
+                        if (i !== 0) {
+                          return (
+                            <div key={track.id} className={`flex w-full hover:bg-spotify-dark-gray ${selectedItems.some((i) => i.id === track.id) ? "border-r border-spotify-light-green" : ""}`} onClick={() => handleItemClick(track)}>
+                              <div className="w-1/6">
+                                {track.album.images[0].url ? (
+                                  <div className="avatar">
+                                    <div className="w-12 rounded-xl">
+                                      <img src={track.album.images[0].url} />
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div className="avatar placeholder">
+                                    <div className="bg-neutral text-neutral-content w-12 rounded-xl">
+                                      <span className="text-xl">{track.album.name}</span>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                              <div className="w-4/6 flex flex-col justify-evenly">
+                                <p className="font-medium">{track.album.name}</p>
+                                <p className="font-light">{track.artists[0].name}</p>
+                              </div>
+                            </div>
+                          );
+                        }
+                      })}
                   </div>
                 </div>
-                <div className="flex w-full">
-                  <div className="w-1/6">
-                    {imageUrl ? (
-                      <div className="avatar">
-                        <div className="w-12 rounded-xl">
-                          <img src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp" />
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="avatar placeholder">
-                        <div className="bg-neutral text-neutral-content w-12 rounded-xl">
-                          <span className="text-xl">{"judul lagu"}</span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                  <div className="w-4/6 flex flex-col justify-evenly">
-                    <p>Judul</p>
-                    <p>Artist</p>
-                  </div>
-                </div>
-                <div className="flex w-full">
-                  <div className="w-1/6">
-                    {imageUrl ? (
-                      <div className="avatar">
-                        <div className="w-12 rounded-xl">
-                          <img src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp" />
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="avatar placeholder">
-                        <div className="bg-neutral text-neutral-content w-12 rounded-xl">
-                          <span className="text-xl">{"judul lagu"}</span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                  <div className="w-4/6 flex flex-col justify-evenly">
-                    <p>Judul</p>
-                    <p>Artist</p>
-                  </div>
-                </div>
-                <div className="flex w-full">
-                  <div className="w-1/6">
-                    {imageUrl ? (
-                      <div className="avatar">
-                        <div className="w-12 rounded-xl">
-                          <img src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp" />
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="avatar placeholder">
-                        <div className="bg-neutral text-neutral-content w-12 rounded-xl">
-                          <span className="text-xl">{"judul lagu"}</span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                  <div className="w-4/6 flex flex-col justify-evenly">
-                    <p>Judul</p>
-                    <p>Artist</p>
-                  </div>
-                </div>
-              </div>
-            </div>
+              </>
+            )}
           </div>
-          <div className="flex w-full pt-10 px-10 shadow-md justify-center h-80">
+          <div className="flex w-full pt-10 px-10 shadow-md justify-evenly h-96">
             <div className="w-full">
-              <span className="text-md md:text-2xl text-spotify-white font-medium">Artists</span>
-              <div className="flex w-full pt-5">
-                <div className="w-1/5">
-                  {imageUrl ? (
-                    <div className="avatar shadow">
-                      <div className="w-32 rounded-full">
-                        <img src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp" />
+              {artists.length > 0 && (
+                <>
+                  <span className="text-md md:text-2xl text-spotify-white font-medium">Artists</span>
+                  <div className="flex w-full pt-5 gap-x-3">
+                    {artists.map((artist, i) => (
+                      <div key={i + 1} className={`w-1/5 hover:bg-spotify-dark-gray ${selectedItems.some((i) => i.id === artist.id) ? "border-b border-spotify-light-green" : ""}`} onClick={() => handleItemClick(artist)}>
+                        {artist.images[0].url ? (
+                          <div className="avatar shadow">
+                            <div className="w-32 rounded-full">
+                              <img src={artist.images[0].url} />
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="avatar placeholder shadow">
+                            <div className="bg-neutral text-neutral-content w-32 rounded-full">
+                              <span className="text-xl">{artist.name}</span>
+                            </div>
+                          </div>
+                        )}
+                        <p className="text-lg text-spotify-white font-medium pt-4">{artist.name}</p>
+                        <p className="text-md text-spotify-white font-normal pt-1 opacity-75">{artist.name}</p>
                       </div>
-                    </div>
-                  ) : (
-                    <div className="avatar placeholder shadow">
-                      <div className="bg-neutral text-neutral-content w-32 rounded-full">
-                        <span className="text-xl">{"judul lagu"}</span>
-                      </div>
-                    </div>
-                  )}
-                  <p className="text-lg text-spotify-white font-medium pt-4">Nama Artist</p>
-                  <p className="text-md text-spotify-white font-normal pt-1 opacity-75">Artist</p>
-                </div>
-                <div className="w-1/5">
-                  {imageUrl ? (
-                    <div className="avatar shadow">
-                      <div className="w-32 rounded-full">
-                        <img src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp" />
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="avatar placeholder shadow">
-                      <div className="bg-neutral text-neutral-content w-32 rounded-full">
-                        <span className="text-xl">{"judul lagu"}</span>
-                      </div>
-                    </div>
-                  )}
-                  <p className="text-lg text-spotify-white font-medium pt-4">Nama Artist</p>
-                  <p className="text-md text-spotify-white font-normal pt-1 opacity-75">Artist</p>
-                </div>
-                <div className="w-1/5">
-                  {imageUrl ? (
-                    <div className="avatar shadow">
-                      <div className="w-32 rounded-full">
-                        <img src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp" />
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="avatar placeholder shadow">
-                      <div className="bg-neutral text-neutral-content w-32 rounded-full">
-                        <span className="text-xl">{"judul lagu"}</span>
-                      </div>
-                    </div>
-                  )}
-                  <p className="text-lg text-spotify-white font-medium pt-4">Nama Artist</p>
-                  <p className="text-md text-spotify-white font-normal pt-1 opacity-75">Artist</p>
-                </div>
-                <div className="w-1/5">
-                  {imageUrl ? (
-                    <div className="avatar shadow">
-                      <div className="w-32 rounded-full">
-                        <img src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp" />
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="avatar placeholder shadow">
-                      <div className="bg-neutral text-neutral-content w-32 rounded-full">
-                        <span className="text-xl">{"judul lagu"}</span>
-                      </div>
-                    </div>
-                  )}
-                  <p className="text-lg text-spotify-white font-medium pt-4">Nama Artist</p>
-                  <p className="text-md text-spotify-white font-normal pt-1 opacity-75">Artist</p>
-                </div>
-                <div className="w-1/5">
-                  {imageUrl ? (
-                    <div className="avatar shadow">
-                      <div className="w-32 rounded-full">
-                        <img src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp" />
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="avatar placeholder shadow">
-                      <div className="bg-neutral text-neutral-content w-32 rounded-full">
-                        <span className="text-xl">{"judul lagu"}</span>
-                      </div>
-                    </div>
-                  )}
-                  <p className="text-lg text-spotify-white font-medium pt-4">Nama Artist</p>
-                  <p className="text-md text-spotify-white font-normal pt-1 opacity-75">Artist</p>
-                </div>
-              </div>
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>

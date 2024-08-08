@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import instance from "../config/instance";
+import { toast } from "react-toastify";
 
 export default function Home() {
   const [loginUrl, setLoginUrl] = useState("");
@@ -15,7 +16,29 @@ export default function Home() {
       });
       setLoginUrl(data.loginUrl);
     } catch (error) {
-      console.error("Error fetching login URL:", error);
+      if (error.response.data.message) {
+        toast.error(error.response.data.message, {
+          position: "top-center",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "light",
+        });
+      } else {
+        toast.error(error.message, {
+          position: "top-center",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "light",
+        });
+      }
     }
   }
   useEffect(() => {
@@ -26,7 +49,16 @@ export default function Home() {
     if (loginUrl) {
       window.location.href = loginUrl;
     } else {
-      console.error("Login URL is not available");
+      toast.error("Login URL Does not exists", {
+        position: "top-center",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "light",
+      });
     }
   }
   return (

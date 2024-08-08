@@ -77,7 +77,7 @@ const router = createBrowserRouter([
         element: <Histories />,
       },
       {
-        path: "/histories/details",
+        path: "/histories/:historyId",
         element: <HistoryDetails />,
       },
       {

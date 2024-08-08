@@ -2,8 +2,13 @@ import { Link, useNavigate } from "react-router-dom";
 import Avatar from "../components/Avatar";
 import instance from "../config/instance";
 import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchHistories } from "../redux/app/historySlice";
+import { toast } from "react-toastify";
 
 export default function Profile() {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
   const [profile, setProfile] = useState("");
   const [fullName, setFullName] = useState("");
   const [imageUrl, setImageUrl] = useState("");
@@ -11,29 +16,13 @@ export default function Profile() {
   const [email, setEmail] = useState("");
   const [spotifyId, setSpotifyId] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
-  const [histories, setHistories] = useState([]);
-  const navigate = useNavigate();
+  const histories = useSelector((state) => state.history.value);
+  const loadingHistory = useSelector((state) => state.history.loading);
+
   function rowHandler(id) {
-    navigate("");
+    navigate(`/histories/${id}`);
   }
-  async function fetchHistories() {
-    try {
-      setIsLoading(true);
-      const response = await instance({
-        method: "get",
-        url: "/roasts",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-        },
-      });
-      setHistories(response.data.data);
-    } catch (error) {
-      setIsLoading(false);
-      console.log(error);
-    } finally {
-      setIsLoading(false);
-    }
-  }
+
   async function uploadImage(e) {
     try {
       setIsLoading(true);
@@ -45,13 +34,35 @@ export default function Profile() {
         method: "patch",
         url: "/profile",
         headers: {
-          // "Content-Type": "multipart/form-data",
           Authorization: `Bearer ${localStorage.getItem("access_token")}`,
         },
         data: formData,
       });
     } catch (error) {
-      console.log(error);
+      if (error.response.data.message) {
+        toast.error(error.response.data.message, {
+          position: "top-center",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "light",
+        });
+      } else {
+        toast.error(error.message, {
+          position: "top-center",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "light",
+        });
+      }
+
       setIsLoading(false);
     } finally {
       setIsLoading(false);
@@ -76,15 +87,37 @@ export default function Profile() {
       setImageUrl(data.imageUrl);
       setSpotifyId(data.spotifyId);
     } catch (error) {
-      console.log(error);
+      if (error.response.data.message) {
+        toast.error(error.response.data.message, {
+          position: "top-center",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "light",
+        });
+      } else {
+        toast.error(error.message, {
+          position: "top-center",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "light",
+        });
+      }
     }
   }
   useEffect(() => {
     fetchData();
-    fetchHistories();
+    dispatch(fetchHistories());
   }, []);
 
-  if (isLoading) {
+  if (isLoading || loadingHistory) {
     return (
       <>
         <div className="flex w-full min-h-screen flex-col justify-center items-center">
@@ -118,16 +151,16 @@ export default function Profile() {
                 <table className="table w-full">
                   <thead>
                     <tr>
-                      <th className="text-spotify-green opacity-70">ID</th>
+                      <th className="text-spotify-green opacity-70">No</th>
                       <th className="hidden lg:table-cell text-spotify-green opacity-70">Roast Type</th>
                       <th className="text-spotify-green opacity-70">Roast Data</th>
                       <th className="hidden lg:table-cell text-spotify-green opacity-70">Date</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {histories.map((history) => (
+                    {histories.map((history, index) => (
                       <tr key={history.id} className="hover" onClick={() => rowHandler(history.id)}>
-                        <td>{history.id}</td>
+                        <td>{index + 1}</td>
                         <td className="hidden lg:table-cell">{history.roastType}</td>
                         <td className="truncate max-w-xs">{history.roastData}</td>
                         <td className="hidden lg:table-cell">{new Date(history.createdAt).toLocaleString().split(",")[0]}</td>

@@ -1,30 +1,22 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { deleteHistory, fetchHistories } from "../redux/app/historySlice";
+import { toast } from "react-toastify";
 
 export default function Histories() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [histories, setHistories] = useState([]);
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const histories = useSelector((state) => state.history.value);
+  const isLoading = useSelector((state) => state.history.loading);
 
-  async function fetchHistories() {
-    try {
-      setIsLoading(true);
-      const response = await instance({
-        method: "get",
-        url: "/roasts",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-        },
-      });
-      setHistories(response.data.data);
-    } catch (error) {
-      setIsLoading(false);
-      console.log(error);
-    } finally {
-      setIsLoading(false);
-    }
+  function deleteHandler(e, id) {
+    e.preventDefault();
+    dispatch(deleteHistory(id));
   }
 
   useEffect(() => {
-    fetchHistories();
+    dispatch(fetchHistories());
   }, []);
 
   if (isLoading) {
@@ -38,30 +30,45 @@ export default function Histories() {
   }
   return (
     <>
-      <p>{JSON.stringify(histories)}</p>
       <div className="flex flex-col items-center justify-center h-screen w-full mx-auto gap-y-5">
-        <div className="overflow-x-auto w-full">
+        <h1 className="text-2xl font-bold mb-4">Roast History</h1>
+        <div className="overflow-y-auto w-full px-10 pb-10 h-[80%]">
           {histories.length > 0 && (
             <table className="table w-full">
               <thead>
                 <tr>
-                  <th className="text-spotify-green opacity-70">ID</th>
+                  <th className="text-spotify-green opacity-70">No</th>
                   <th className="hidden lg:table-cell text-spotify-green opacity-70">Roast Type</th>
                   <th className="text-spotify-green opacity-70">Roast Data</th>
                   <th className="hidden lg:table-cell text-spotify-green opacity-70">Date</th>
-                  <th></th>
+                  <th className="hidden lg:table-cell text-spotify-green opacity-70 w-36 text-center">Action</th>
                 </tr>
               </thead>
               <tbody>
-                {histories.map((history) => (
-                  <tr key={history.id} className="hover" onClick={() => rowHandler(history.id)}>
-                    <td>{history.id}</td>
+                {histories.map((history, index) => (
+                  <tr key={history.id} className="hover">
+                    <td>{index + 1}</td>
                     <td className="hidden lg:table-cell">{history.roastType}</td>
                     <td className="truncate max-w-xs">{history.roastData}</td>
                     <td className="hidden lg:table-cell">{new Date(history.createdAt).toLocaleString().split(",")[0]}</td>
-                    <td className="gap-x-5">
-                      <button className="btn btn-ghost btn-xs">details</button>
-                      <button className="btn btn-ghost btn-xs">delete</button>
+                    <td className="gap-x-5 w-36">
+                      <button
+                        className="btn btn-ghost btn-xs"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          navigate(`/histories/${history.id}`);
+                        }}
+                      >
+                        details
+                      </button>
+                      <button
+                        className="btn btn-ghost btn-xs"
+                        onClick={(e) => {
+                          deleteHandler(e, history.id);
+                        }}
+                      >
+                        delete
+                      </button>
                     </td>
                   </tr>
                 ))}

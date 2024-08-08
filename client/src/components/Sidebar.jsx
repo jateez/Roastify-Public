@@ -7,7 +7,10 @@ export default function Sidebar() {
         <label htmlFor="my-drawer-3" aria-label="close sidebar" className="drawer-overlay"></label>
         <ul className="menu bg-base-200 min-h-full w-80 p-4">
           <li>
-            <div className="h-1/4">Profile</div>
+            <Link to={"/"}>Home</Link>
+          </li>
+          <li>
+            <Link to={"/users"}>Profile</Link>
           </li>
           <li>
             <Link to={"/histories"}>Histories</Link>

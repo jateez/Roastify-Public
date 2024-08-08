@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import instance from "../config/instance";
+import { toast } from "react-toastify";
 
 export default function SpotifyRoast() {
   const [roastData, setRoastData] = useState(null);
@@ -9,8 +10,7 @@ export default function SpotifyRoast() {
   async function fetchRoastData() {
     const spotify_access_token = localStorage.getItem("spotify_access_token");
     if (!spotify_access_token) {
-      // navigate("/");
-      console.log("Token set:", localStorage.getItem("spotify_access_token"));
+      navigate("/");
       return;
     }
     try {
@@ -22,16 +22,32 @@ export default function SpotifyRoast() {
           Authorization: `Bearer ${localStorage.getItem("access_token")}`,
         },
       });
-      console.log(data, "<<< data");
       setRoastData(data.output.roastData);
-      // console.log(roastData, "<<<< ROAST DATA");
-      // console.log(roastData.output.roastData, "<<<< ROAST DATA inside OUTPUT");
     } catch (error) {
-      console.error("Error fetching roast data:", error);
-      // localStorage.removeItem("spotify_access_token");
-      // Toast Error first must login again
-      // navigate("/");
-      // Handle error (e.g., redirect to login if token is invalid)
+      if (error.response.data.message) {
+        toast.error(error.response.data.message, {
+          position: "top-center",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "light",
+        });
+      } else {
+        toast.error(error.message, {
+          position: "top-center",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "light",
+        });
+      }
+
       setIsLoading(false);
     } finally {
       setIsLoading(false);

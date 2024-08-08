@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import axios from "../config/instance";
 import instance from "../config/instance";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 export default function Register() {
   const [fullName, setFullName] = useState("");
@@ -22,7 +23,29 @@ export default function Register() {
       });
       navigation("/login");
     } catch (error) {
-      console.log(error);
+      if (error.response.data.message) {
+        toast.error(error.response.data.message, {
+          position: "top-center",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "light",
+        });
+      } else {
+        toast.error(error.message, {
+          position: "top-center",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "light",
+        });
+      }
     }
   }
 
@@ -40,7 +63,29 @@ export default function Register() {
         localStorage.setItem("access_token", data.access_token);
         navigation("/");
       } catch (error) {
-        console.log(error);
+        if (error.response.data.message) {
+          toast.error(error.response.data.message, {
+            position: "top-center",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+            theme: "light",
+          });
+        } else {
+          toast.error(error.message, {
+            position: "top-center",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+            theme: "light",
+          });
+        }
       }
     }
     google.accounts.id.initialize({

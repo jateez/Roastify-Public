@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import instance from "../config/instance";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigation = useNavigate();
+
   async function handleLogin(e) {
     try {
       e.preventDefault();
@@ -20,13 +22,34 @@ export default function Login() {
       localStorage.setItem("access_token", data.access_token);
       navigation("/");
     } catch (error) {
-      console.log(error);
+      if (error.response.data.message) {
+        toast.error(error.response.data.message, {
+          position: "top-center",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "light",
+        });
+      } else {
+        toast.error(error.message, {
+          position: "top-center",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "light",
+        });
+      }
     }
   }
 
   useEffect(() => {
     async function handleCredentialResponse(response) {
-      console.log("Encoded JWT ID token: " + response.credential);
       try {
         const { data } = await instance({
           method: "post",
@@ -35,21 +58,39 @@ export default function Login() {
             google_token: response.credential,
           },
         });
-        console.log(data);
         localStorage.setItem("access_token", data.access_token);
         navigation("/");
       } catch (error) {
-        console.log(error);
+        if (error.response.data.message) {
+          toast.error(error.response.data.message, {
+            position: "top-center",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+            theme: "light",
+          });
+        } else {
+          toast.error(error.message, {
+            position: "top-center",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+            theme: "light",
+          });
+        }
       }
     }
     google.accounts.id.initialize({
       client_id: "263573458748-vts77pkujo5394a5egf867qje5ke4bcj.apps.googleusercontent.com",
       callback: handleCredentialResponse,
     });
-    google.accounts.id.renderButton(
-      document.getElementById("buttonDiv"),
-      { theme: "outline", size: "large" } // customization attributes
-    );
+    google.accounts.id.renderButton(document.getElementById("buttonDiv"), { theme: "outline", size: "large" });
     // google.accounts.id.prompt(); // also display the One Tap dialog
   }, []);
   return (

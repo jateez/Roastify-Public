@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
-import instance from "../config/instance";
+import { toast } from "react-toastify";
+
 
 export default function SpotifyCallback() {
   const [error, setError] = useState(null);
@@ -10,10 +11,8 @@ export default function SpotifyCallback() {
 
   function fetchToken() {
     const spotify_access_token = params.get("spotify_access_token");
-    console.log(spotify_access_token);
     if (spotify_access_token) {
       localStorage.setItem("spotify_access_token", spotify_access_token);
-      console.log("Token set:", localStorage.getItem("spotify_access_token"));
       navigate("/spotify-roast");
     }
   }
