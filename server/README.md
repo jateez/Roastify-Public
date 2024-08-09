@@ -225,7 +225,7 @@ _Response (401 - Unauthorized)_
 
 ```json
 {
-  "message": "Unauthorized"
+  "message": "Error Unauthorized"
 }
 ```
 
@@ -284,7 +284,7 @@ _Response (401 - Unauthorized)_
 
 ```json
 {
-  "message": "Unauthorized"
+  "message": "Error Unauthorized"
 }
 ```
 
@@ -341,7 +341,7 @@ _Response (401 - Unauthorized)_
 
 ```json
 {
-  "message": "Unauthorized"
+  "message": "Error Unauthorized"
 }
 ```
 
@@ -392,7 +392,7 @@ _Response (401 - Unauthorized)_
 
 ```json
 {
-  "message": "Unauthorized"
+  "message": "Error Unauthorized"
 }
 ```
 
@@ -417,16 +417,6 @@ Spotify authentication callback.
 ```
 code: The authorization code received from Spotify.
 state: The state parameter for CSRF protection.
-```
-
-**Response:**
-
-_Response (200 - OK)_
-
-```json
-{
-  "message": "Spotify login successful"
-}
 ```
 
 _Response (400 - Bad Request)_
@@ -488,7 +478,7 @@ _Response (401 - Unauthorized)_
 
 ```json
 {
-  "message": "Unauthorized"
+  "message": "Error Unauthorized"
 }
 ```
 
@@ -552,7 +542,7 @@ _Response (401 - Unauthorized)_
 
 ```json
 {
-  "message": "Unauthorized"
+  "message": "Error Unauthorized"
 }
 ```
 
@@ -606,7 +596,7 @@ _Response (401 - Unauthorized)_
 
 ```json
 {
-  "message": "Unauthorized"
+  "message": "Error Unauthorized"
 }
 ```
 
@@ -673,7 +663,7 @@ _Response (401 - Unauthorized)_
 
 ```json
 {
-  "message": "Unauthorized"
+  "message": "Error Unauthorized"
 }
 ```
 
