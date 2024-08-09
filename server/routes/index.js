@@ -18,6 +18,6 @@ router.get("/spotify-roast", authentication, SpotifyController.getUserRoast)
 router.post("/spotify-search", authentication, SpotifyController.searchSpotify)
 router.get("/profile", authentication, Controller.getProfile)
 router.patch("/profile", authentication, mutlerUpload, Controller.uploadImage)
-// router.post("/custom-roast", authentication, SpotifyController.generateRoast)
+router.post("/custom-roast", authentication, SpotifyController.getCustomRoast)
 
 module.exports = { router }
