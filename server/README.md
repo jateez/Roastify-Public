@@ -683,4 +683,55 @@ _Response (500 - Internal Server Error)_
 }
 ```
 
+&nbsp;
+
+## 14. POST /custom-roast
+
+**Description:**  
+Roast by choosing custom songs.
+
+**Request:**
+
+_Headers_
+
+```json
+{
+  "authorization": "Bearer <token>"
+}
+```
+
+_Body_
+
+```json
+{
+  "data": "<array of objects of songs/artists>"
+}
+```
+
+**Response:**
+
+_Response (200 - OK)_
+
+```json
+{
+  "output": "<string>"
+}
+```
+
+_Response (401 - Unauthorized)_
+
+```json
+{
+  "message": "Error Unauthorized"
+}
+```
+
+_Response (500 - Internal Server Error)_
+
+```json
+{
+  "message": "Internal Server Error"
+}
+```
+
 ---
