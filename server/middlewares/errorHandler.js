@@ -12,10 +12,6 @@ const errorHandler = async (err, req, res, next) => {
       status = 401;
       err.message = "Error credentials does not match";
       break;
-    case "Forbidden":
-      status = 403;
-      err.message = "Error Forbidden"
-      break;
     case "NotFound":
       status = 404;
       err.message = "Error Data not found"

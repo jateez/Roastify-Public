@@ -4,17 +4,17 @@ async function authentication(req, res, next) {
   try {
     const access_token = req.headers.authorization;
     if (!access_token) {
-      throw ("Unauthenticated")
+      throw ({ name: "Unauthenticated" })
     }
     const [type, token] = access_token.split(" ");
     if (type !== "Bearer") {
-      throw ("Unauthenticated")
+      throw ({ name: "Unauthenticated" })
     }
 
     const decodedToken = verifyToken(token)
     const loggedUser = await User.findByPk(decodedToken.id)
     if (!loggedUser) {
-      throw ("Unauthenticated")
+      throw ({ name: "Unauthenticated" })
     }
     req.userId = loggedUser.id
     next()

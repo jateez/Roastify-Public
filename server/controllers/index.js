@@ -18,16 +18,13 @@ class Controller {
       if (!email || !password) {
         throw ({ name: "CredentialsRequired" })
       }
-      if (!fullName) {
-        throw ({ name: "CredentialsRequired" })
-      }
       const createdUser = await User.create({ email, password, fullName })
 
       res.status(201).json({ id: createdUser.id, email, fullName })
     } catch (error) {
       if (error.name === "SequelizeValidationError") {
-        const name = error.errors.map(el => el.message);
-        error.name = name;
+        const message = error.errors.map(el => el.message);
+        error.message = message[0];
       }
       next(error)
     }
@@ -44,12 +41,10 @@ class Controller {
           email
         }
       });
-      console.log(email, password, user)
+      const isPasswordMatch = verifyHashedPassword(password, user.password);
       if (!user) {
         throw { name: "Unauthorized" }
       }
-      const isPasswordMatch = verifyHashedPassword(password, user.password);
-      console.log("hashed password")
       if (!isPasswordMatch) {
         throw { name: "Unauthorized" }
       }
@@ -115,9 +110,6 @@ class Controller {
           UserId: userId
         }
       })
-      if (!data) {
-        throw { name: "NotFound" }
-      }
       res.status(200).json({ data })
     } catch (error) {
       next(error)
