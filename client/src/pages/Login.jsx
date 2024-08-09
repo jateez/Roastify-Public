@@ -100,11 +100,11 @@ export default function Login() {
         <div className="card-body flex flex-col items-center justify-center w-full">
           <div className="w-full">
             <label htmlFor="email">Email Address</label>
-            <input type="email" placeholder="johndoe@mail.com" className="input input-bordered w-full" onChange={(e) => setEmail(e.target.value)} />
+            <input type="email" className="input input-bordered w-full" onChange={(e) => setEmail(e.target.value)} />
           </div>
           <div className="w-full">
             <label htmlFor="password">Password</label>
-            <input type="password" placeholder="*****" className="input input-bordered w-full" onChange={(e) => setPassword(e.target.value)} />
+            <input type="password" className="input input-bordered w-full" onChange={(e) => setPassword(e.target.value)} />
           </div>
           <div className="w-full my-5">
             <button className="btn w-full bg-spotify-green hover:bg-spotify-white text-spotify-white hover:text-spotify-green" onClick={handleLogin}>

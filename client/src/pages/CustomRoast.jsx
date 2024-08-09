@@ -12,6 +12,7 @@ export default function CustomRoast() {
   const [selectedItems, setSelectedItems] = useState([]);
   const [type, setType] = useState("artist%2Ctrack");
   const [error, setError] = useState(null);
+  const [showRoast, setShowRoast] = useState(false);
 
   useEffect(() => {
     const debounceTimeout = setTimeout(async () => {
@@ -19,7 +20,6 @@ export default function CustomRoast() {
         setResults([]);
         return;
       }
-
       setIsLoading(true);
       setError(null);
       try {
@@ -88,14 +88,15 @@ export default function CustomRoast() {
         method: "post",
         url: "/custom-roast",
         data: {
-          data: selectedItems,
+          selectedItems: selectedItems,
         },
         headers: {
           Authorization: `Bearer ${localStorage.getItem("access_token")}`,
         },
       });
-      setOutput(data);
+      setOutput(data.output);
       setSelectedItems([]);
+      setShowRoast(true);
     } catch (error) {
       setIsLoading(false);
       if (error.message) {
@@ -123,10 +124,8 @@ export default function CustomRoast() {
       }
     } finally {
       setIsLoading(false);
-      document.getElementById("modalResult").showModal();
     }
   };
-
   if (isLoading) {
     return (
       <>
@@ -152,16 +151,17 @@ export default function CustomRoast() {
             <button className="btn sm:btn-sm md:btn-md bg-spotify-green hover:bg-spotify-light-green text-spotify-black" onClick={handleRoastClick}>
               Roast
             </button>
-            <dialog id="modalResult" className="modal">
-              <div className="modal-box">
-                <h3 className="font-bold text-lg">{"Your Roast"}</h3>
-                <p className="py-4">{output}</p>
-              </div>
-              <form method="dialog" className="modal-backdrop">
-                <button>close</button>
-              </form>
-            </dialog>
           </div>
+          {showRoast && (
+            <div className="w-full max-w-2xl mt-8 p-6 bg-spotify-dark-gray rounded-lg shadow-lg">
+              <h3 className="text-xl font-bold text-spotify-white mb-4">Your Roast</h3>
+              <p className="text-gray-300">{output}</p>
+              <button className="mt-4 btn btn-sm btn-outline btn-success" onClick={() => setShowRoast(false)}>
+                Close
+              </button>
+            </div>
+          )}
+
           <div className="divider divider-lg pt-10"></div>
           <div className="flex w-full pt-10 px-10 shadow-md justify-evenly h-96">
             {tracks.length > 0 && (
