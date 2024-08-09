@@ -42,6 +42,9 @@ const errorHandler = async (err, req, res, next) => {
     case "Internal Server Error":
       err.message = "Internal Server Error";
       break;
+    default:
+      err.message = err.name;
+      break;
   }
   res.status(status).json({ message: err.message })
 }

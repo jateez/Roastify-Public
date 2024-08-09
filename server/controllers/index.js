@@ -36,7 +36,6 @@ class Controller {
   static async loginEmail(req, res, next) {
     try {
       const { email, password } = req.body;
-
       if (!email || !password) {
         throw { name: "CredentialsRequired" }
       }
@@ -45,10 +44,12 @@ class Controller {
           email
         }
       });
+      console.log(email, password, user)
       if (!user) {
         throw { name: "Unauthorized" }
       }
       const isPasswordMatch = verifyHashedPassword(password, user.password);
+      console.log("hashed password")
       if (!isPasswordMatch) {
         throw { name: "Unauthorized" }
       }

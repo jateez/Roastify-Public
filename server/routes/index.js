@@ -15,9 +15,9 @@ router.delete("/roasts/:roastId", authentication, Controller.deleteRoastById)
 router.get("/spotify-login", authentication, SpotifyController.login)
 router.get("/spotify-callback", SpotifyController.callback)
 router.get("/spotify-roast", authentication, SpotifyController.getUserRoast)
-// router.post("/custom-roast", authentication, SpotifyController.generateRoast)
 router.post("/spotify-search", authentication, SpotifyController.searchSpotify)
 router.get("/profile", authentication, Controller.getProfile)
 router.patch("/profile", authentication, mutlerUpload, Controller.uploadImage)
+// router.post("/custom-roast", authentication, SpotifyController.generateRoast)
 
 module.exports = { router }
