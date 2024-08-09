@@ -106,7 +106,6 @@ describe("GET /roasts/:roastId", () => {
       .send({ email: "test@example.com", password: "password123" });
     access_token = loginResponse.body.access_token;
 
-    // Create a roast to test with
     const roastResponse = await request(app)
       .get("/spotify-roast")
       .set("Authorization", `Bearer ${access_token}`)
@@ -142,7 +141,6 @@ describe("DELETE /roasts/:roastId", () => {
       .send({ email: "test@example.com", password: "password123" });
     access_token = loginResponse.body.access_token;
 
-    // Create a roast to delete
     const roastResponse = await request(app)
       .get("/spotify-roast")
       .set("Authorization", `Bearer ${access_token}`)

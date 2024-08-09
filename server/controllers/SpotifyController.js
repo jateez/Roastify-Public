@@ -1,6 +1,7 @@
 const client_id = process.env.SPOTIFY_CLIENT_ID;
 const client_secret = process.env.SPOTIFY_CLIENT_SECRET
-const redirect_uri = 'http://localhost:3003/spotify-callback';
+// const redirect_uri = 'http://localhost:3003/spotify-callback';
+const redirect_uri = 'https://roastify-api.aryajati.my.id/spotify-callback';
 const querystring = require("querystring");
 const generateRandomString = require("../helpers/randomStrGenerator");
 const axios = require("axios");
